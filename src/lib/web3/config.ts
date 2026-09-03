@@ -1,10 +1,10 @@
 /**
  * Web3 config for THE AETHERGRID Phase 1.
- * Chains: Ethereum, Base, Polygon, BSC. Preferred: Base.
+ * Chains: Ethereum, Base. Preferred: Base.
  */
 
 import { http, createConfig, createStorage, cookieStorage } from "wagmi";
-import { base, bsc, mainnet, polygon } from "wagmi/chains";
+import { base, mainnet } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   metaMaskWallet,
@@ -15,7 +15,7 @@ import { SITE_NAME } from "@/lib/constants";
 
 export const PRIMARY_CHAIN = base;
 
-export const SUPPORTED_CHAINS = [base, mainnet, polygon, bsc] as const;
+export const SUPPORTED_CHAINS = [base, mainnet] as const;
 
 export const WC_PROJECT_ID =
   process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "MISSING_WC_PROJECT_ID";
@@ -40,12 +40,10 @@ export function getWagmiConfig() {
 
   return createConfig({
     connectors,
-    chains: [base, mainnet, polygon, bsc],
+    chains: [base, mainnet],
     transports: {
       [base.id]: http(),
       [mainnet.id]: http(),
-      [polygon.id]: http(),
-      [bsc.id]: http(),
     },
     ssr: true,
     storage: createStorage({

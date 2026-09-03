@@ -63,10 +63,10 @@ export function Navbar() {
       </div>
 
       <div className="border-t border-neon-cyan/10 px-3 py-1.5">
-        <div className="mx-auto flex max-w-7xl justify-end sm:justify-center">
-          <MarketTicker />
-        </div>
-      </div>
+  <div className="mx-auto flex max-w-7xl justify-end px-3 sm:px-6">
+    <MarketTicker />
+  </div>
+</div>
 
       <AnimatePresence>
         {open && (
