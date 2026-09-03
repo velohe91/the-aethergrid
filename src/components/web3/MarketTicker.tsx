@@ -116,17 +116,7 @@ export function MarketTicker() {
           "border-[#14f1d9]/60 bg-[#14f1d9]/10 text-[#6fffe9] shadow-[0_0_8px_rgba(20,241,217,0.12)]",
         ),
       },
-      {
-        key: "pol",
-        label: "POL",
-        value: data?.polUsd ?? null,
-        source: data?.sources.pol ?? "pending",
-        className: chipTone(
-          status,
-          data?.polUsd ?? null,
-          "border-neon-violet/60 bg-neon-violet/10 text-[#d8a4ff] shadow-[0_0_8px_rgba(168,85,247,0.12)]",
-        ),
-      },
+   
       {
         key: "xtz",
         label: "XTZ",
@@ -137,6 +127,18 @@ export function MarketTicker() {
           status,
           data?.xtzUsd ?? data?.txzUsd ?? null,
           "border-[#2f7df6]/60 bg-[#2f7df6]/10 text-[#75a8ff] shadow-[0_0_8px_rgba(47,125,246,0.12)]",
+        ),
+      },
+
+         {
+        key: "pol",
+        label: "POL",
+        value: data?.polUsd ?? null,
+        source: data?.sources.pol ?? "pending",
+        className: chipTone(
+          status,
+          data?.polUsd ?? null,
+          "border-neon-violet/60 bg-neon-violet/10 text-[#d8a4ff] shadow-[0_0_8px_rgba(168,85,247,0.12)]",
         ),
       },
     ],
