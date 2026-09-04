@@ -1,6 +1,6 @@
 # THE AETHERGRID
 
-> **Grid Node // Protocol in Development.** ⚡
+> The Aethergrid Interface **Grid Node // Protocol in Development.**⚡
 
 The Aethergrid is a cyberpunk digital environment under development — a living node connecting interactive media, Web3 infrastructure, digital collectibles, and the emerging Aethergrid game universe.
 
