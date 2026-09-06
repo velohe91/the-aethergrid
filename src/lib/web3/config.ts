@@ -17,6 +17,22 @@ export const PRIMARY_CHAIN = base;
 
 export const SUPPORTED_CHAINS = [base, mainnet] as const;
 
+/** Short cyberpunk labels for the header network badge */
+export const CHAIN_BADGE_LABELS: Record<number, string> = {
+  [base.id]: "BASE",
+  [mainnet.id]: "ETHEREUM",
+};
+
+export function getChainBadgeLabel(
+  chainId: number,
+  fallbackName?: string,
+): string {
+  return (
+    CHAIN_BADGE_LABELS[chainId] ??
+    (fallbackName ? fallbackName.toUpperCase() : `CHAIN ${chainId}`)
+  );
+}
+
 export const WC_PROJECT_ID =
   process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "MISSING_WC_PROJECT_ID";
 
