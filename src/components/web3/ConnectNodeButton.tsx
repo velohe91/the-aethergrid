@@ -1,22 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-
-function truncateAddress(address: string) {
-  return `${address.slice(0, 4)}…${address.slice(-2)}`;
-}
+import { NodeAccountModal } from "@/components/web3/NodeAccountModal";
+import { NetworkSwitchModal } from "@/components/web3/NetworkSwitchModal";
+import { getChainBadgeLabel, PRIMARY_CHAIN } from "@/lib/web3/config";
+import { truncateAddress } from "@/lib/web3/account";
 
 /**
- * CONNECT NODE — RainbowKit wrapper. Site remains usable when disconnected.
+ * CONNECT NODE — RainbowKit handles wallet selection; custom Aethergrid
+ * modals handle the connected account and network controls.
  */
 export function ConnectNodeButton() {
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [networkModalOpen, setNetworkModalOpen] = useState(false);
+
   return (
     <ConnectButton.Custom>
       {({
         account,
         chain,
-        openAccountModal,
-        openChainModal,
         openConnectModal,
         mounted,
       }) => {
@@ -47,38 +50,45 @@ export function ConnectNodeButton() {
           );
         }
 
-        if (chain.unsupported) {
-          return (
-            <button
-              type="button"
-              onClick={openChainModal}
-              className="rounded border border-amber-400/50 bg-amber-500/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-widest text-amber-200 transition-colors hover:bg-amber-500/20"
-            >
-              Switch Network
-            </button>
-          );
-        }
+        const unsupported = chain.unsupported;
 
         return (
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={openChainModal}
-              className="hidden rounded border border-neon-violet/40 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-neon-violet sm:inline-flex"
-              title={chain.name}
-            >
-              {chain.name}
-            </button>
-            <button
-              type="button"
-              onClick={openAccountModal}
-              className="rounded border border-neon-cyan/40 bg-neon-cyan/5 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-neon-cyan transition-colors hover:border-neon-cyan hover:bg-neon-cyan/10"
-              title={`${account.address} · Disconnect from account modal`}
-            >
-              <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-              {truncateAddress(account.address)}
-            </button>
-          </div>
+          <>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setNetworkModalOpen(true)}
+                className={`hidden rounded border px-2 py-1 font-mono text-[9px] uppercase tracking-widest sm:inline-flex ${
+                  unsupported
+                    ? "border-amber-400/50 bg-amber-500/10 text-amber-200"
+                    : "border-neon-violet/40 text-neon-violet"
+                }`}
+                title={chain.name}
+              >
+                {unsupported
+                  ? "SWITCH NETWORK"
+                  : getChainBadgeLabel(chain.id, chain.name)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccountModalOpen(true)}
+                className="rounded border border-neon-cyan/40 bg-neon-cyan/5 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-neon-cyan transition-colors hover:border-neon-cyan hover:bg-neon-cyan/10"
+                title={`${account.address} · Disconnect from account modal`}
+              >
+                <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                {truncateAddress(account.address)}
+              </button>
+            </div>
+
+            <NodeAccountModal
+              open={accountModalOpen}
+              onClose={() => setAccountModalOpen(false)}
+            />
+            <NetworkSwitchModal
+              open={networkModalOpen}
+              onClose={() => setNetworkModalOpen(false)}
+            />
+          </>
         );
       }}
     </ConnectButton.Custom>
