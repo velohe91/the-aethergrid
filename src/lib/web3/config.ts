@@ -1,11 +1,11 @@
 /**
  * Web3 config for THE AETHERGRID Phase 1.
- * Chains: Arc Testnet, Base, Ethereum, Polygon, BSC. Preferred: Arc Testnet.
+ * Chains: Arc Testnet, Base, Ethereum. Preferred: Arc Testnet.
  */
 
 import { http, createConfig, createStorage, cookieStorage } from "wagmi";
 import { defineChain } from "viem";
-import { base, bsc, mainnet, polygon } from "wagmi/chains";
+import { base, mainnet } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   metaMaskWallet,
@@ -38,13 +38,24 @@ export const arcTestnet = defineChain({
 
 export const PRIMARY_CHAIN = arcTestnet;
 
-export const SUPPORTED_CHAINS = [
-  arcTestnet,
-  base,
-  mainnet,
-  polygon,
-  bsc,
-] as const;
+export const SUPPORTED_CHAINS = [arcTestnet, base, mainnet] as const;
+
+/** Short cyberpunk labels for the header network badge */
+export const CHAIN_BADGE_LABELS: Record<number, string> = {
+  [arcTestnet.id]: "ARC TESTNET",
+  [base.id]: "BASE",
+  [mainnet.id]: "ETHEREUM",
+};
+
+export function getChainBadgeLabel(
+  chainId: number,
+  fallbackName?: string,
+): string {
+  return (
+    CHAIN_BADGE_LABELS[chainId] ??
+    (fallbackName ? fallbackName.toUpperCase() : `CHAIN ${chainId}`)
+  );
+}
 
 export const WC_PROJECT_ID =
   process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "MISSING_WC_PROJECT_ID";
@@ -69,13 +80,11 @@ export function getWagmiConfig() {
 
   return createConfig({
     connectors,
-    chains: [arcTestnet, base, mainnet, polygon, bsc],
+    chains: [arcTestnet, base, mainnet],
     transports: {
       [arcTestnet.id]: http("https://rpc.testnet.arc.network"),
       [base.id]: http(),
       [mainnet.id]: http(),
-      [polygon.id]: http(),
-      [bsc.id]: http(),
     },
     ssr: true,
     storage: createStorage({
