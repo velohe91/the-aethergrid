@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { NodeAccountModal } from "@/components/web3/NodeAccountModal";
 import { NetworkSwitchModal } from "@/components/web3/NetworkSwitchModal";
-import { getChainBadgeLabel, PRIMARY_CHAIN } from "@/lib/web3/config";
+import { getChainBadgeLabel } from "@/lib/web3/config";
 import { truncateAddress } from "@/lib/web3/account";
 
 /**
@@ -24,7 +24,7 @@ export function ConnectNodeButton() {
         mounted,
       }) => {
         const ready = mounted;
-        const connected = ready && account && chain;
+        const connected = ready && account;
 
         if (!ready) {
           return (
@@ -50,7 +50,7 @@ export function ConnectNodeButton() {
           );
         }
 
-        const unsupported = chain.unsupported;
+        const unsupported = chain?.unsupported ?? false;
 
         return (
           <>
@@ -63,11 +63,13 @@ export function ConnectNodeButton() {
                     ? "border-amber-400/50 bg-amber-500/10 text-amber-200"
                     : "border-neon-violet/40 text-neon-violet"
                 }`}
-                title={chain.name}
+                title={chain?.name ?? "Unknown network"}
               >
                 {unsupported
                   ? "SWITCH NETWORK"
-                  : getChainBadgeLabel(chain.id, chain.name)}
+                  : chain
+                    ? getChainBadgeLabel(chain.id, chain.name)
+                    : "NETWORK"}
               </button>
               <button
                 type="button"
