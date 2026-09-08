@@ -1,6 +1,6 @@
 /**
  * EVM account helpers for THE AETHERGRID.
- * Arc Testnet, Base, and Ethereum only.
+ * Ethereum + Base + Arc Testnet.
  */
 
 export function truncateAddress(
@@ -14,9 +14,9 @@ export function truncateAddress(
 
 export function getEvmExplorerUrl(chainId: number, address: string): string {
   const map: Record<number, string> = {
-    5042002: `https://testnet.arcscan.app/address/${address}`,
-    8453: `https://basescan.org/address/${address}`,
     1: `https://etherscan.io/address/${address}`,
+    8453: `https://basescan.org/address/${address}`,
+    5042002: `https://testnet.arcscan.app/address/${address}`,
   };
   return map[chainId] ?? `https://etherscan.io/address/${address}`;
 }

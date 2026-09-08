@@ -15,13 +15,18 @@ const EVM_ROWS = SUPPORTED_CHAINS.map((c) => ({
   label: getChainBadgeLabel(c.id, c.name),
 }));
 
-/** Custom Aethergrid network switcher. */
+/**
+ * Custom network switcher — Ethereum, Base, and Arc Testnet.
+ * Portaled to document.body so navbar backdrop-filter cannot clip it.
+ */
 export function NetworkSwitchModal({ open, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
   const { chain } = useAccount();
   const { switchChain, isPending } = useSwitchChain();
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -35,7 +40,8 @@ export function NetworkSwitchModal({ open, onClose }: Props) {
   if (!mounted || !open) return null;
 
   const supportedEvmIds = new Set<number>(SUPPORTED_CHAINS.map((c) => c.id));
-  const activeEvmId = chain && supportedEvmIds.has(chain.id) ? chain.id : null;
+  const activeEvmId =
+    chain && supportedEvmIds.has(chain.id) ? chain.id : null;
 
   const handleEvm = (chainId: number) => {
     if (chain?.id === chainId) {
@@ -47,7 +53,7 @@ export function NetworkSwitchModal({ open, onClose }: Props) {
       {
         onSuccess: () => onClose(),
         onError: () => {
-          // Keep modal open so the user can retry or close it.
+          /* wagmi surfaces; keep modal open */
         },
       },
     );
@@ -61,6 +67,7 @@ export function NetworkSwitchModal({ open, onClose }: Props) {
         aria-label="Close"
         onClick={onClose}
       />
+
       <div
         role="dialog"
         aria-modal="true"

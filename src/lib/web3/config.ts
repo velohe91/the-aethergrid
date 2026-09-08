@@ -1,6 +1,6 @@
 /**
  * Web3 config for THE AETHERGRID Phase 1.
- * Chains: Arc Testnet, Base, Ethereum. Preferred: Arc Testnet.
+ * Chains: Ethereum, Base, Arc Testnet. Preferred: Base.
  */
 
 import { http, createConfig, createStorage, cookieStorage } from "wagmi";
@@ -36,15 +36,15 @@ export const arcTestnet = defineChain({
   },
 });
 
-export const PRIMARY_CHAIN = arcTestnet;
+export const PRIMARY_CHAIN = base;
 
-export const SUPPORTED_CHAINS = [arcTestnet, base, mainnet] as const;
+export const SUPPORTED_CHAINS = [base, mainnet, arcTestnet] as const;
 
 /** Short cyberpunk labels for the header network badge */
 export const CHAIN_BADGE_LABELS: Record<number, string> = {
-  [arcTestnet.id]: "ARC TESTNET",
   [base.id]: "BASE",
   [mainnet.id]: "ETHEREUM",
+  [arcTestnet.id]: "ARC TESTNET",
 };
 
 export function getChainBadgeLabel(
@@ -80,11 +80,11 @@ export function getWagmiConfig() {
 
   return createConfig({
     connectors,
-    chains: [arcTestnet, base, mainnet],
+    chains: [base, mainnet, arcTestnet],
     transports: {
-      [arcTestnet.id]: http("https://rpc.testnet.arc.network"),
       [base.id]: http(),
       [mainnet.id]: http(),
+      [arcTestnet.id]: http("https://rpc.testnet.arc.network"),
     },
     ssr: true,
     storage: createStorage({
