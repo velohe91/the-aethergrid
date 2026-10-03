@@ -1,101 +1,38 @@
 import { NextResponse } from "next/server";
-import type { MarketPricesResponse } from "@/lib/types";
+import type { MarketCoinQuote, MarketPricesResponse } from "@/lib/types";
 
-export type { MarketPricesResponse };
-
-/** In-memory cache (30–60s) to reduce upstream rate limits */
 let cache: { at: number; body: MarketPricesResponse } | null = null;
 const CACHE_MS = 45_000;
+const CACHE_HEADERS = { "Cache-Control": "public, s-maxage=45, stale-while-revalidate=30" };
 
-type CoinGeckoPrices = Record<string, { usd?: number }>;
+type CoinMarketCapListing = { id?: number; symbol?: string; name?: string; cmc_rank?: number | null; quote?: Array<{ id?: number; symbol?: string; price?: number | null }> };
 
-type PriceResult = {
-  value: number | null;
-  source: string;
-};
-
-function getPrice(
-  data: CoinGeckoPrices | null,
-  id: string,
-  source: string,
-): PriceResult {
-  const usd = data?.[id]?.usd;
-  return {
-    value: typeof usd === "number" ? usd : null,
-    source: typeof usd === "number" ? source : "pending",
-  };
+function toCoin(row: CoinMarketCapListing, index: number): MarketCoinQuote {
+  const usdQuote = row.quote?.find((quote) => quote.symbol === "USD") ?? row.quote?.[0];
+  const usd = typeof usdQuote?.price === "number" && Number.isFinite(usdQuote.price) ? usdQuote.price : null;
+  const rank = typeof row.cmc_rank === "number" && row.cmc_rank > 0 ? row.cmc_rank : index + 1;
+  return { id: typeof row.id === "number" ? String(row.id) : `coin-${index}`, symbol: (row.symbol ?? "").toUpperCase(), name: row.name ?? "", image: typeof row.id === "number" ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${row.id}.png` : null, usd, marketCapRank: rank };
 }
 
-async function fetchMarketPrices(): Promise<CoinGeckoPrices | null> {
-  const ids = [
-    "bitcoin",
-    "ethereum",
-    "binancecoin",
-    "solana",
-    "polygon-ecosystem-token",
-    "tezos",
-  ];
-
+async function fetchTopMarkets(): Promise<MarketCoinQuote[] | null> {
   try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=usd`,
-      { next: { revalidate: 45 }, headers: { Accept: "application/json" } },
-    );
+    const res = await fetch("https://pro-api.coinmarketcap.com/public-api/v3/cryptocurrency/listings/latest?start=1&limit=20&convert=USD", { next: { revalidate: 45 }, headers: { Accept: "application/json" } });
     if (!res.ok) return null;
-    return (await res.json()) as CoinGeckoPrices;
-  } catch {
-    return null;
-  }
+    const payload = (await res.json()) as { data?: CoinMarketCapListing[] };
+    if (!Array.isArray(payload.data)) return null;
+    return payload.data.slice(0, 20).map(toCoin).sort((a, b) => a.marketCapRank - b.marketCapRank);
+  } catch { return null; }
 }
 
 export async function GET() {
   const now = Date.now();
-  if (cache && now - cache.at < CACHE_MS) {
-    return NextResponse.json(cache.body, {
-      headers: {
-        "Cache-Control": "public, s-maxage=45, stale-while-revalidate=30",
-      },
-    });
+  if (cache && now - cache.at < CACHE_MS) return NextResponse.json(cache.body, { headers: CACHE_HEADERS });
+  const coins = await fetchTopMarkets();
+  if (!coins) {
+    if (cache) return NextResponse.json(cache.body, { headers: CACHE_HEADERS });
+    return NextResponse.json({ updatedAt: new Date().toISOString(), coins: [] } satisfies MarketPricesResponse, { status: 502, headers: CACHE_HEADERS });
   }
-
-  const data = await fetchMarketPrices();
-
-  const btc = getPrice(data, "bitcoin", "coingecko:bitcoin");
-  const eth = getPrice(data, "ethereum", "coingecko:ethereum");
-  const bnb = getPrice(data, "binancecoin", "coingecko:binancecoin");
-  const sol = getPrice(data, "solana", "coingecko:solana");
-  const pol = getPrice(
-    data,
-    "polygon-ecosystem-token",
-    "coingecko:polygon-ecosystem-token",
-  );
-  const xtz = getPrice(data, "tezos", "coingecko:tezos");
-
-  const body: MarketPricesResponse = {
-    btcUsd: btc.value,
-    ethUsd: eth.value,
-    bnbUsd: bnb.value,
-    solUsd: sol.value,
-    polUsd: pol.value,
-    xtzUsd: xtz.value,
-    txzUsd: xtz.value,
-    updatedAt: new Date().toISOString(),
-    sources: {
-      btc: btc.source,
-      eth: eth.source,
-      bnb: bnb.source,
-      sol: sol.source,
-      pol: pol.source,
-      xtz: xtz.source,
-      txz: xtz.source,
-    },
-  };
-
+  const body: MarketPricesResponse = { updatedAt: new Date().toISOString(), coins };
   cache = { at: now, body };
-
-  return NextResponse.json(body, {
-    headers: {
-      "Cache-Control": "public, s-maxage=45, stale-while-revalidate=30",
-    },
-  });
+  return NextResponse.json(body, { headers: CACHE_HEADERS });
 }
