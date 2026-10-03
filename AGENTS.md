@@ -14,7 +14,7 @@ This repository is **THE AETHERGRID**, a Next.js application for the interactive
 
 ## Branches and commits
 
-- Work on a focused branch named `agent/<short-description>` unless the user explicitly names a different branch.
+- Work on a focused branch named `agents` unless the user explicitly names a different branch.
 - Do not push, merge, or commit directly to `main` unless the user explicitly requests it.
 - Before creating a commit, show the user what changed and obtain approval.
 - Use focused commits with clear messages. Do not bundle unrelated changes.
@@ -46,7 +46,6 @@ The following systems are protected by default. Do not change them unless the us
 
 ### Web3 and blockchain
 
-- Supported networks and chain IDs: Ethereum and Base, with Base as the preferred network.
 - Wallet provider configuration and the `Web3Providers` architecture.
 - wagmi, RainbowKit, viem, React Query, and existing connector configuration.
 - Wallet connection and disconnection behavior, connection modals, and chain switching.
