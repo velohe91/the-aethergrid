@@ -51,6 +51,13 @@ function tokenNumber(identifier: string | undefined): number | null {
   return Number.isInteger(value) ? value : null;
 }
 
+function spiritNumber(nft: OpenSeaNFT): number | null {
+  const nameNumber = Number(nft.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
+  if (Number.isInteger(nameNumber) && nameNumber > 0) return nameNumber;
+
+  return tokenNumber(nft.identifier);
+}
+
 function legacyForToken(tokenId: number | null): SpiritItem | undefined {
   if (tokenId === null) return undefined;
   return catalog.find((spirit) => {
@@ -112,8 +119,8 @@ function normalizeSpirit(
       tags: ["aethergrid", "spirit", "ethereum"],
       core: "cyan",
     }),
-    id: legacy?.id ?? fallbackId,
-    code: legacy?.code ?? fallbackCode,
+    id: fallbackId,
+    code: fallbackCode,
     title,
     image: isVideoMedia(imageUrl) ? "" : imageUrl,
     video: videoUrl,
@@ -153,14 +160,15 @@ async function fetchOpenSeaSpirits(): Promise<SpiritItem[]> {
   }
 
   const data = (await response.json()) as OpenSeaResponse;
-  const orderedNfts = [...(data.nfts ?? [])].sort((a, b) => {
-    const aName = Number(a.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
-    const bName = Number(b.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
-    return aName - bName;
-  });
+  const orderedNfts = [...(data.nfts ?? [])]
+    .map((nft, index) => ({
+      nft,
+      number: spiritNumber(nft) ?? index + 1,
+    }))
+    .sort((a, b) => a.number - b.number);
 
   return orderedNfts
-    .map((nft, index) => normalizeSpirit(nft, index + 1))
+    .map(({ nft, number }) => normalizeSpirit(nft, number))
     .filter((spirit): spirit is SpiritItem => Boolean(spirit))
     .sort((a, b) => {
       const aId = Number(a.id.match(/(\d+)$/)?.[1] ?? 0);
