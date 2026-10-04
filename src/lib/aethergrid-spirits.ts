@@ -59,14 +59,16 @@ function legacyForToken(tokenId: number | null): SpiritItem | undefined {
   });
 }
 
-function traitValue(
-  traits: OpenSeaTrait[] | undefined,
-  name: string,
-): string | undefined {
-  const value = traits?.find((trait) =>
-    trait.trait_type?.toLowerCase().includes(name),
-  )?.value;
-  return typeof value === "string" ? value.toLowerCase() : undefined;
+function isVideoMedia(url?: string | null): boolean {
+  return Boolean(url && /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+}
+
+function extractAethergridStarEmojis(description?: string | null): string {
+  if (!description) return "";
+
+  return Array.from(description.matchAll(/⭐/gu))
+    .map((match) => match[0])
+    .join("");
 }
 
 function normalizeSpirit(
@@ -75,24 +77,19 @@ function normalizeSpirit(
 ): SpiritItem | null {
   const tokenId = tokenNumber(nft.identifier);
   const legacy = legacyForToken(tokenId);
+  const imageUrl = nft.image_url || "";
+  const videoUrl = isVideoMedia(imageUrl)
+    ? imageUrl
+    : nft.original_animation_url || nft.animation_url || undefined;
 
-  if (!nft.image_url) return null;
+  if (!imageUrl && !videoUrl) return null;
 
-  const coreValue = traitValue(nft.traits, "core");
-  const core =
-    legacy?.core ??
-    (coreValue === "purple" ||
-    coreValue === "gold" ||
-    coreValue === "void" ||
-    coreValue === "dual" ||
-    coreValue === "cyan"
-      ? coreValue
-      : "cyan");
-  const fallbackId = `VEL-AGS${String(displayNumber).padStart(2, "0")}`;
-  const fallbackCode = `AGS${String(displayNumber).padStart(2, "2")}`;
-  const video = nft.original_animation_url ?? nft.animation_url ?? legacy?.video;
-  const description = nft.description?.trim() || legacy?.description || "Aethergrid Spirit";
-  const title = nft.name?.trim() || legacy?.title || `Aethergrid Spirit ${displayNumber}`;
+  const fallbackId = `VEL-AGS${String(displayNumber).padStart(3, "0")}`;
+  const fallbackCode = `AGS${String(displayNumber).padStart(2, "0")}`;
+  const description = extractAethergridStarEmojis(nft.description);
+  const title =
+    nft.name?.trim() ||
+    `The Aethergrid Spirits #${displayNumber}`;
   const marketplace =
     nft.opensea_url ||
     `https://opensea.io/item/ethereum/${CONTRACT}/${nft.identifier}`;
@@ -102,26 +99,35 @@ function normalizeSpirit(
       id: fallbackId,
       code: fallbackCode,
       title,
-      image: nft.image_url,
+      image: "",
       description,
-      lore: description,
+      lore:
+        nft.description?.trim() ||
+        "Live Aethergrid Spirit recorded on Ethereum.",
       series: "Aethergrid Spirits",
       rarity: "common",
       marketplace,
       status: "Archived",
       year: 2052,
       tags: ["aethergrid", "spirit", "ethereum"],
-      core,
+      core: "cyan",
     }),
     id: legacy?.id ?? fallbackId,
     code: legacy?.code ?? fallbackCode,
     title,
-    image: nft.image_url,
-    video: video || undefined,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
     description,
+    lore:
+      nft.description?.trim() ||
+      legacy?.lore ||
+      "Live Aethergrid Spirit recorded on Ethereum.",
     rarity: rarityFromTraits(nft.traits, legacy?.rarity ?? "common"),
     marketplace,
-    core,
+    status: legacy?.status ?? "Archived",
+    year: legacy?.year ?? 2052,
+    tags: legacy?.tags ?? ["aethergrid", "spirit", "ethereum"],
+    core: legacy?.core ?? "cyan",
   };
 }
 
@@ -147,21 +153,22 @@ async function fetchOpenSeaSpirits(): Promise<SpiritItem[]> {
   }
 
   const data = (await response.json()) as OpenSeaResponse;
-  const nfts = (data.nfts ?? [])
-    .filter((nft) => nft.image_url)
-    .sort((a, b) => {
-      const aId = tokenNumber(a.identifier) ?? Number.MAX_SAFE_INTEGER;
-      const bId = tokenNumber(b.identifier) ?? Number.MAX_SAFE_INTEGER;
-      return aId - bId;
-    });
+  const orderedNfts = [...(data.nfts ?? [])].sort((a, b) => {
+    const aName = Number(a.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
+    const bName = Number(b.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
+    return aName - bName;
+  });
 
-  return nfts
+  return orderedNfts
     .map((nft, index) => normalizeSpirit(nft, index + 1))
     .filter((spirit): spirit is SpiritItem => Boolean(spirit))
-    .sort((a, b) => b.code.localeCompare(a.code, undefined, { numeric: true }));
+    .sort((a, b) => {
+      const aId = Number(a.id.match(/(\d+)$/)?.[1] ?? 0);
+      const bId = Number(b.id.match(/(\d+)$/)?.[1] ?? 0);
+      return aId - bId;
+    });
 }
 
-/** Live Aethergrid Spirits from OpenSea, with the existing catalog as metadata fallback. */
 export async function getLiveAethergridSpirits(): Promise<SpiritItem[]> {
   if (!spiritsPromise) {
     spiritsPromise = fetchOpenSeaSpirits().catch((error) => {
