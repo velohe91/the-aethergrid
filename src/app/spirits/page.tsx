@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { NeonButton } from "@/components/ui/NeonButton";
 import { SpiritGrid } from "@/components/spirits/SpiritGrid";
 import { getLiveAethergridSpirits } from "@/lib/aethergrid-spirits";
 
@@ -25,6 +26,11 @@ export default async function SpiritsPage() {
 
 Collect a Spirit. Unlock a fragment of the Aethergrid.`}
         />
+        <div className="mt-6 mb-6 flex justify-start">
+          <NeonButton href="/arcade" className="min-w-[240px] text-glow-sm">
+            ARCADE
+          </NeonButton>
+        </div>
         <SpiritGrid items={spirits} />
       </div>
     </PageTransition>
