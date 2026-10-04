@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useId, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import type { SpiritItem } from "@/lib/types";
 import { RARITY_COLORS } from "@/lib/constants";
-import { SpiritMedia } from "@/components/spirits/SpiritMedia";
 
 function subscribe() {
   return () => {};
@@ -22,10 +22,13 @@ type Props = {
   onClose: () => void;
 };
 
-/**
- * Accessible lore modal: Esc / backdrop / close, focus return, scroll lock.
- * Portaled to document.body so it escapes nav stacking contexts.
- */
+function getMotionKind(src?: string): "gif" | "video" | null {
+  if (!src) return null;
+  if (/\.gif(\?|#|$)/i.test(src)) return "gif";
+  if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(src)) return "video";
+  return "video";
+}
+
 export function SpiritModal({ spirit, onClose }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -63,6 +66,13 @@ export function SpiritModal({ spirit, onClose }: Props) {
   const rarityClass = spirit
     ? RARITY_COLORS[spirit.rarity] ?? RARITY_COLORS.common
     : "";
+  const spiritNumber = spirit?.id.match(/(\d+)$/)?.[1];
+  const staticImage =
+    spiritNumber && Number(spiritNumber) >= 1 && Number(spiritNumber) <= 22
+      ? `/spirits/images/${spiritNumber.padStart(3, "0")}.png`
+      : spirit?.image;
+  const motionKind = spirit ? getMotionKind(spirit.video) : null;
+  const showMotion = Boolean(spirit?.video);
 
   return createPortal(
     <AnimatePresence>
@@ -95,11 +105,39 @@ export function SpiritModal({ spirit, onClose }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="grid min-h-0 gap-0 md:grid-cols-2">
-              <SpiritMedia
-                spirit={spirit}
-                showToggle
-                className="shrink-0 md:min-h-[320px]"
-              />
+              <div className="relative aspect-square shrink-0 overflow-hidden bg-void cyber-grid md:min-h-[320px]">
+                {showMotion && motionKind === "gif" && spirit.video ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={spirit.video}
+                    src={spirit.video}
+                    alt={`${spirit.title} — animation`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : showMotion && motionKind === "video" && spirit.video ? (
+                  <video
+                    key={spirit.video}
+                    src={spirit.video}
+                    poster={staticImage}
+                    autoPlay
+                    loop
+                    playsInline
+                    className="absolute inset-0 h-full w-full object-cover"
+                    aria-label={`${spirit.title} — video`}
+                  />
+                ) : (
+                  <Image
+                    key={staticImage}
+                    src={staticImage ?? spirit.image}
+                    alt={`${spirit.title} — still`}
+                    fill
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    priority
+                  />
+                )}
+              </div>
 
               <div
                 ref={contentRef}
