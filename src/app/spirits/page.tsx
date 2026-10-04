@@ -27,7 +27,11 @@ export default async function SpiritsPage() {
 Collect a Spirit. Unlock a fragment of the Aethergrid.`}
         />
         <div className="mt-6 mb-6 flex justify-start">
-          <NeonButton href="/arcade" className="min-w-[240px] text-glow-sm">
+          <NeonButton
+            href="https://velohesystem.com/arcade"
+            external
+            className="min-w-[240px] text-glow-sm"
+          >
             ARCADE
           </NeonButton>
         </div>
