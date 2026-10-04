@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SpiritGrid } from "@/components/spirits/SpiritGrid";
-import { spirits } from "@/data/spirits";
+import { getLiveAethergridSpirits } from "@/lib/aethergrid-spirits";
 
 export const metadata: Metadata = {
   title: "Spirits",
@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     "The Aethergrid Spirits — robotic energy beings born where light, code, and consciousness merge. Five cores: Cyan, Purple, Gold, Void, Dual-Core.",
 };
 
-export default function SpiritsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SpiritsPage() {
+  const spirits = await getLiveAethergridSpirits();
+
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
