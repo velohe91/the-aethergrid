@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { NeonButton } from "@/components/ui/NeonButton";
 import { SpiritGrid } from "@/components/spirits/SpiritGrid";
-import { spirits } from "@/data/spirits";
+import { getLiveAethergridSpirits } from "@/lib/aethergrid-spirits";
 
 export const metadata: Metadata = {
   title: "Spirits",
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
     "The Aethergrid Spirits — robotic energy beings born where light, code, and consciousness merge. Five cores: Cyan, Purple, Gold, Void, Dual-Core.",
 };
 
-export default function SpiritsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SpiritsPage() {
+  const spirits = await getLiveAethergridSpirits();
+
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -21,6 +26,15 @@ export default function SpiritsPage() {
 
 Collect a Spirit. Unlock a fragment of the Aethergrid.`}
         />
+        <div className="mt-6 mb-6 flex justify-start">
+          <NeonButton
+            href="https://velohesystem.com/arcade"
+            external
+            className="min-w-[240px] text-glow-sm"
+          >
+            ARCADE
+          </NeonButton>
+        </div>
         <SpiritGrid items={spirits} />
       </div>
     </PageTransition>
